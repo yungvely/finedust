@@ -76,15 +76,11 @@
             queryParams += '&' + encodeURIComponent('stationName') + '=' + encodeURIComponent(locationName);
             queryParams += '&' + encodeURIComponent('dataTerm') + '=' + encodeURIComponent('DAILY');
             queryParams += '&' + encodeURIComponent('ver') + '=' + encodeURIComponent('1.3');
-        $.ajaxPrefilter(function(options) {
-            if (options.crossDomain && $.support.cors) {
-                options.url = 'https://cors-anywhere.herokuapp.com/' + options.url;
-            }
-        });
+        
         $.ajax({
             type: "GET", // GET 방식으로 요청한다.
             crossDomain: true,
-            url: "http://openapi.airkorea.or.kr/openapi/services/rest/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty" + queryParams + '&_returnType=json',
+            url: "https://cors-anywhere.herokuapp.com/http://openapi.airkorea.or.kr/openapi/services/rest/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty" + queryParams + '&_returnType=json',
             data: {}, // 요청하면서 함께 줄 데이터 (GET 요청시엔 비워두세요)
             dataType: 'json',
             success: function(response){ // 서버에서 준 결과를 response라는 변수에 담음
