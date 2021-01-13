@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Restfull API</title>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0">
+<!--/* component css */-->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css" />
+<link href="https://fonts.googleapis.com/css?family=Gugi:400" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=Black+Han+Sans:400" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=Jua:400" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reset-css@5.0.1/reset.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.rawgit.com/moonspam/NanumSquare/master/nanumsquare.css">
+<link rel="stylesheet" type="text/css" href="./css/main.css">
+</head>
+<body>
+<div id="wrap">
+    <!--/* header */-->
+    <!--/* content */-->
+    <div id="content" role="main">
+        <!--/* Components /*-->
+        <section class="finedust-api-test">
+            <h1 class="finedust-api-test__title"> 미세먼즤 </h1>
+            <div class="finedust-api-test__content">
+                <div class="time">기준시간 <span class="dateTime"></span> <button type="button" class="refresh"><i class="fas fa-sync"></i></button></div>
+                <div class="tab">
+                    <button type="button" class="tab_title active">미세먼지</button>
+                    <button type="button" class="tab_title">초미세먼지</button>
+                </div>
+                <div class="dusty">
+                    &#128073;
+                    <span>
+                        <input type="checkbox" class="blind" id="nameChange" /> <label for="nameChange" class="locationName"></label>
+                        <div class="popup">
+                            <div class="dimmed">
+                                <label class="close" for="nameChange"><i class="fas fa-times"></i></label>
+                                측정소를 입력하세요. <br>
+                                <input type="text"/ class="new_locate">
+                                <div class="error"></div>
+                                <button type="button" class="submit">확인</button>
+                            </div>
+                        </div>
+                    </span> &#128072;
+                    <span class="dusty_title"></span> 농도 <strong class="value_text"></strong>
+                    <span class="pmValue"></span>
+                    <div class="disc">
+                        <ul>
+                            <li>- 시간은 1시간 단위로 갱신 됩니다.</li>
+                            <li>- 지역명을 클릭하면 다른 지역을 확인 할 수 있습니다.</li>
+                            <li>- 위치는 측정소 기반으로 확인하실수 있습니다. 측정소명은 &#128073;
+                                [<a target="_blank" href="https://www.airkorea.or.kr/web/stationInfo?pMENU_NO=93" title="측정소 알아보기">링크참고</a>]
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </div>
+<!--/* footer */-->
+</div>
+<script src="https://code.jquery.com/jquery-3.4.1.js"></script>
+<script>
+
+    var locationName= '종로구';
+    var data = '';
+    var activeTab = $('.tab_title')[0];
+
+    function callAjax() {
+        var queryParams = '?' + encodeURIComponent('serviceKey') + '='
+            +'Lg%2BOknMzK5CfpVpO8CoINYysSCrFWaDUFpsVmiwVVB4XiOyWtVcklduDCb3jJaBiTG6DkMagoXsobeVOlJbaKA%3D%3D';
+            queryParams += '&' + encodeURIComponent('numOfRows') + '=' + encodeURIComponent('10');
+            queryParams += '&' + encodeURIComponent('pageNo') + '=' + encodeURIComponent('1');
+            queryParams += '&' + encodeURIComponent('stationName') + '=' + encodeURIComponent(locationName);
+            queryParams += '&' + encodeURIComponent('dataTerm') + '=' + encodeURIComponent('DAILY');
+            queryParams += '&' + encodeURIComponent('ver') + '=' + encodeURIComponent('1.3');
+
+        $.ajax({
+            type: "GET", // GET 방식으로 요청한다.
+            crossDomain: true,
+            url: "http://openapi.airkorea.or.kr/openapi/services/rest/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty" + queryParams + '&_returnType=json',
+            data: {}, // 요청하면서 함께 줄 데이터 (GET 요청시엔 비워두세요)
+            dataType: 'json',
+            success: function(response){ // 서버에서 준 결과를 response라는 변수에 담음
+                data = response['list'][0];
+
+                if (!!data) {
+                    $('.dateTime').html(data['dataTime']);
+                    $('.locationName').html(locationName);
+                    fillContent();
+                    if($('#nameChange').is(":checked")) {
+                        $('#nameChange').prop("checked", false);
+                        $('.error').text('');
+                    }
+                } else {
+                    $('.error').text('유효하지않은 측정소 입니다.');
+                }
+            }
+        });
+    }
+
+    function fillContent(UltraFineDusty) {
+        if (data === '') return;
+        $('.dusty').removeClass('great soso bad crazy');
+
+        var pmValue = data['pm10Value'];
+        var pmGrade = data['pm10Grade1h'];
+        var pmText = '';
+        var pmExpression= '';
+
+        if (UltraFineDusty) {
+            pmValue = data['pm25Value'];
+            pmGrade = data['pm25Grade1h'];
+        }
+        $('.dusty_title').html($(activeTab).text());
+        $('.pmValue').html(pmValue);
+
+        if (pmGrade == 1) {
+            pmText = '좋음';
+            pmExpression='&#128518';
+            $('.dusty').addClass('great')
+        }
+        else if (pmGrade == 2) {
+            pmText = '보통';
+            pmExpression='&#128528';
+            $('.dusty').addClass('soso')
+        }
+        else if (pmGrade == 3) {
+            pmText = '나쁨';
+            pmExpression='&#128544';
+            $('.dusty').addClass('bad')
+        }
+        else {
+            pmText = '매우나쁨';
+            pmExpression='&#128565';
+            $('.dusty').addClass('crazy')
+        }
+
+
+        $('.value_text').html(pmText + pmExpression);
+
+    }
+
+    $('.tab_title').on('click',function(e){
+        activeTab = e.target;
+        $('.tab_title').removeClass('active');
+        $(e.target).addClass('active');
+
+        if ($('.tab_title')[1] == e.target) {
+            fillContent(true);
+        } else {
+            fillContent();
+        }
+    });
+
+    $('.refresh').on('click',function(e){
+        if (data === '') return;
+        var d = new Date;
+        var serverTime = data['dataTime'].substring(data['dataTime'].length-5,data['dataTime'].length-3);
+
+        if (d.getHours() == serverTime) return;
+        callAjax();
+    });
+
+    $('.submit').on('click',function(e){
+        var $locationName= $(e.target.control);
+        e.preventDefault();
+        var $newLocateName = $('.new_locate').val();
+        if (!$newLocateName) {
+            $('.error').text('값을 입력해주세요');
+        } else {
+            $('.error').text('');
+            locationName = $newLocateName;
+            callAjax();
+        }
+    });
+
+    callAjax();
+
+</script>
+</body>
+</html>
